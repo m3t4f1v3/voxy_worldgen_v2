@@ -12,21 +12,29 @@ import net.minecraft.world.level.chunk.PalettedContainer;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class NetworkClientHandler {
     
     public static void init() {
-        ClientPlayNetworking.registerGlobalReceiver(NetworkHandler.HandshakePayload.TYPE, (payload, context) -> {
-            boolean serverHasMod = payload.serverHasMod();
-            context.client().execute(() -> {
-                NetworkState.setServerConnected(serverHasMod);
-            });
+        ClientPlayNetworking.registerGlobalReceiver(NetworkHandler.HANDSHAKE_ID, (client, networkHandler, buf, responseSender) -> {
+            try {
+                NetworkHandler.HandshakePayload payload = new NetworkHandler.HandshakePayload(buf);
+                client.execute(() -> NetworkState.setServerConnected(payload.serverHasMod()));
+            } catch (Exception e) {
+                VoxyWorldGenV2.LOGGER.error("failed to decode handshake payload", e);
+            }
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(NetworkHandler.LODDataPayload.TYPE, (payload, context) -> {
-            context.client().execute(() -> {
-                handleLODData(payload);
-            });
+        ClientPlayNetworking.registerGlobalReceiver(NetworkHandler.LOD_DATA_ID, (client, networkHandler, buf, responseSender) -> {
+            try {
+                var level = client.level;
+                if (level == null) return;
+                NetworkHandler.LODDataPayload payload = new NetworkHandler.LODDataPayload(buf);
+                client.execute(() -> handleLODData(payload));
+            } catch (Exception e) {
+                VoxyWorldGenV2.LOGGER.error("failed to decode LOD data payload", e);
+            }
         });
     }
 
@@ -53,16 +61,10 @@ public class NetworkClientHandler {
                 LevelChunkSection section = new LevelChunkSection(level.registryAccess().registryOrThrow(Registries.BIOME));
                 
                 // we need to read the states and biomes back using RegistryFriendlyByteBuf for palette consistency
-                net.minecraft.network.RegistryFriendlyByteBuf statesBuf = new net.minecraft.network.RegistryFriendlyByteBuf(
-                    new net.minecraft.network.FriendlyByteBuf(statesRaw), 
-                    level.registryAccess()
-                );
+                FriendlyByteBuf statesBuf = new FriendlyByteBuf(statesRaw);
                 ((PalettedContainer<BlockState>) section.getStates()).read(statesBuf);
                 
-                net.minecraft.network.RegistryFriendlyByteBuf biomesBuf = new net.minecraft.network.RegistryFriendlyByteBuf(
-                    new net.minecraft.network.FriendlyByteBuf(biomesRaw), 
-                    level.registryAccess()
-                );
+                FriendlyByteBuf biomesBuf = new FriendlyByteBuf(biomesRaw);
                 ((PalettedContainer<Holder<Biome>>) section.getBiomes()).read(biomesBuf);
                 
                 // ingest into voxy

@@ -24,7 +24,7 @@ public final class TellusWorldFeatures {
         int minZ = pos.getMinBlockZ();
         int[] heights = data.heights();
         
-        int grassId = VoxyIngester.getBlockId(mapper, Blocks.SHORT_GRASS);
+        int grassId = VoxyIngester.getBlockId(mapper, Blocks.GRASS);
         int tallGrassLowerId = VoxyIngester.getBlockId(mapper, Blocks.TALL_GRASS.defaultBlockState().setValue(DoublePlantBlock.HALF, DoubleBlockHalf.LOWER));
         int tallGrassUpperId = VoxyIngester.getBlockId(mapper, Blocks.TALL_GRASS.defaultBlockState().setValue(DoublePlantBlock.HALF, DoubleBlockHalf.UPPER));
 
