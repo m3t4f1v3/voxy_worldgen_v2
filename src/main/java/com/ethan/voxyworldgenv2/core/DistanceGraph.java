@@ -180,7 +180,7 @@ public class DistanceGraph {
         int cbz = center.z >> BATCH_SIZE_SHIFT;
         int rb = (radiusChunks + 3) >> BATCH_SIZE_SHIFT;
 
-        // use a priority queue to process chunks from nearest to farthest
+        // Use a priority queue to process chunks from nearest to farthest
         PriorityQueue<CollectItem> queue = new PriorityQueue<>(Comparator.comparingDouble(i -> i.distSq));
 
         int rbxMin = (cbx - rb) >> ROOT_SIZE_SHIFT;
