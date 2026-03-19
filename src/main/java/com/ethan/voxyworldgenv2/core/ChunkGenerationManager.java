@@ -154,7 +154,8 @@ public final class ChunkGenerationManager {
     private void workerLoop() {
         while (workerRunning.get() && running.get()) {
             try {
-                if (!Config.DATA.enabled || server == null) {
+                final MinecraftServer workerServer = server;
+                if (!Config.DATA.enabled || workerServer == null) {
                     Thread.sleep(100);
                     continue;
                 }
@@ -300,7 +301,7 @@ public final class ChunkGenerationManager {
                 }
 
                 if (!readyToGenerate.isEmpty()) {
-                    server.execute(() -> {
+                    workerServer.execute(() -> {
                         ServerChunkCache cache = finalState.level.getChunkSource();
                         List<ChunkPos> actuallyGenerate = new ArrayList<>();
                         
@@ -336,7 +337,7 @@ public final class ChunkGenerationManager {
                                             onFailure(finalState, pos);
                                         }
                                         cleanupTask(finalState.level, pos);
-                                    }, server);
+                                    }, workerServer);
                             }
                         }
                     });
