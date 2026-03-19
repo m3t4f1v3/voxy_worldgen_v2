@@ -15,6 +15,10 @@ public final class DebugRenderer {
         if (!com.ethan.voxyworldgenv2.core.Config.DATA.showF3MenuStats) return;
         
         Minecraft mc = Minecraft.getInstance();
+
+        if (!mc.options.renderDebug) {
+            return;
+        }
         
         Font font = mc.font;
         int screenWidth = mc.getWindow().getGuiScaledWidth();
