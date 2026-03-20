@@ -9,8 +9,6 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 // reflective access to voxy
 public final class VoxyIngester {
@@ -35,7 +33,6 @@ public final class VoxyIngester {
     private static MethodHandle createEmptySectionHandle;
     private static MethodHandle setPositionHandle;
     private static MethodHandle withLightHandle;
-    private static MethodHandle withBlockBiomeHandle;
     private static MethodHandle mipSectionHandle;
     private static MethodHandle insertUpdateHandle;
     private static MethodHandle getBiomeIdHandle;
@@ -73,7 +70,6 @@ public final class VoxyIngester {
             setPositionHandle = lookup.unreflect(voxelizedSectionClass.getMethod("setPosition", int.class, int.class, int.class));
             
             withLightHandle = lookup.unreflect(mapperClass.getMethod("withLight", long.class, int.class));
-            withBlockBiomeHandle = lookup.unreflect(mapperClass.getMethod("withBlockBiome", long.class, int.class, int.class));
             
             mipSectionHandle = lookup.unreflect(worldConversionFactoryClass.getMethod("mipSection", voxelizedSectionClass, mapperClass));
             insertUpdateHandle = lookup.unreflect(worldUpdaterClass.getMethod("insertUpdate", worldEngineClass, voxelizedSectionClass));

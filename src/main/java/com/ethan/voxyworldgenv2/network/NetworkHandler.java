@@ -18,10 +18,11 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class NetworkHandler {
-    public static final ResourceLocation HANDSHAKE_ID = ResourceLocation.tryParse(VoxyWorldGenV2.MOD_ID + ":handshake");
-    public static final ResourceLocation LOD_DATA_ID = ResourceLocation.tryParse(VoxyWorldGenV2.MOD_ID + ":lod_data");
+    public static final ResourceLocation HANDSHAKE_ID = Objects.requireNonNull(ResourceLocation.tryBuild(VoxyWorldGenV2.MOD_ID, "handshake"));
+    public static final ResourceLocation LOD_DATA_ID = Objects.requireNonNull(ResourceLocation.tryBuild(VoxyWorldGenV2.MOD_ID, "lod_data"));
 
     public record HandshakePayload(boolean serverHasMod) {
         public HandshakePayload(FriendlyByteBuf buf) {
@@ -40,16 +41,16 @@ public class NetworkHandler {
                 buf.writeInt(y);
                 buf.writeByteArray(states);
                 buf.writeByteArray(biomes);
-                buf.writeNullable(blockLight, (b, a) -> b.writeByteArray(a));
-                buf.writeNullable(skyLight, (b, a) -> b.writeByteArray(a));
+                buf.writeNullable(blockLight, FriendlyByteBuf::writeByteArray);
+                buf.writeNullable(skyLight, FriendlyByteBuf::writeByteArray);
             }
             public static SectionData read(FriendlyByteBuf buf) {
                 return new SectionData(
                     buf.readInt(), 
                     buf.readByteArray(), 
                     buf.readByteArray(), 
-                    buf.readNullable(b -> b.readByteArray()), 
-                    buf.readNullable(b -> b.readByteArray())
+                    buf.readNullable(FriendlyByteBuf::readByteArray),
+                    buf.readNullable(FriendlyByteBuf::readByteArray)
                 );
             }
         }
@@ -209,8 +210,7 @@ public class NetworkHandler {
     public static void sendHandshake(ServerPlayer player) {
         ByteBuf outRaw = Unpooled.buffer();
         try {
-            FriendlyByteBuf outFb = new FriendlyByteBuf(outRaw);
-            outFb.writeBoolean(true);
+            outRaw.writeBoolean(true);
             ServerPlayNetworking.send(player, HANDSHAKE_ID, new FriendlyByteBuf(outRaw.retainedDuplicate()));
         } finally {
             outRaw.release();

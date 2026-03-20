@@ -142,11 +142,11 @@ public final class ChunkGenerationManager {
         if (workerThread != null) {
             workerThread.interrupt();
             try {
-                // wait up to 5 seconds for worker to die
                 workerThread.join(5000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+                if (workerThread.isAlive()) {
+                    VoxyWorldGenV2.LOGGER.warn("can't shut down voxy world gen worker");
+                }
+            } catch (InterruptedException ignored) {}
             workerThread = null;
         }
     }
@@ -154,7 +154,8 @@ public final class ChunkGenerationManager {
     private void workerLoop() {
         while (workerRunning.get() && running.get()) {
             try {
-                if (!Config.DATA.enabled || server == null) {
+                final MinecraftServer workerServer = server;
+                if (!Config.DATA.enabled || workerServer == null) {
                     Thread.sleep(100);
                     continue;
                 }
@@ -186,7 +187,6 @@ public final class ChunkGenerationManager {
                 
                 if (batch == null) {
                     // if no generation work, try to catch up on syncing for any player
-                    boolean workDispatched = false;
                     for (ServerPlayer player : players) {
                         var synced = PlayerTracker.getInstance().getSyncedChunks(player.getUUID());
                         if (synced == null) continue;
@@ -197,12 +197,11 @@ public final class ChunkGenerationManager {
                         ds.distanceGraph.collectCompletedInRange(player.chunkPosition(), radius, synced, syncBatch, 64);
                         
                         if (!syncBatch.isEmpty()) {
-                            workDispatched = true;
                             final List<ChunkPos> finalSyncBatch = new ArrayList<>(syncBatch);
                             final ServerLevel level = ds.level;
                             final UUID playerUUID = player.getUUID();
-                            server.execute(() -> {
-                                ServerPlayer p = server.getPlayerList().getPlayer(playerUUID);
+                            workerServer.execute(() -> {
+                                ServerPlayer p = workerServer.getPlayerList().getPlayer(playerUUID);
                                 if (p != null) {
                                     for (ChunkPos syncPos : finalSyncBatch) {
                                         LevelChunk c = level.getChunkSource().getChunk(syncPos.x, syncPos.z, false);
@@ -215,8 +214,6 @@ public final class ChunkGenerationManager {
                             break; // processed one player, break to skip sleep
                         }
                     }
-                    
-                    if (workDispatched) continue; 
                     
                     Thread.sleep(100);
                     continue;
@@ -285,7 +282,7 @@ public final class ChunkGenerationManager {
                 }
 
                 if (!readyToGenerate.isEmpty()) {
-                    server.execute(() -> {
+                    workerServer.execute(() -> {
                         ServerChunkCache cache = finalState.level.getChunkSource();
                         List<ChunkPos> actuallyGenerate = new ArrayList<>();
                         
@@ -321,7 +318,7 @@ public final class ChunkGenerationManager {
                                             onFailure(finalState, pos);
                                         }
                                         cleanupTask(finalState.level, pos);
-                                    }, server);
+                                    }, workerServer);
                             }
                         }
                     });
