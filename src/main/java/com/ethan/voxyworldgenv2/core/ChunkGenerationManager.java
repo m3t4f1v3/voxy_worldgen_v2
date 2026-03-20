@@ -141,6 +141,12 @@ public final class ChunkGenerationManager {
         workerRunning.set(false);
         if (workerThread != null) {
             workerThread.interrupt();
+            try {
+                workerThread.join(5000);
+                if (workerThread.isAlive()) {
+                    VoxyWorldGenV2.LOGGER.warn("can't shut down voxy world gen worker");
+                }
+            } catch (InterruptedException ignored) {}
             workerThread = null;
         }
     }
@@ -186,7 +192,6 @@ public final class ChunkGenerationManager {
                 
                 if (batch == null) {
                     // if no generation work, try to catch up on syncing for any player
-                    boolean workDispatched = false;
                     for (ServerPlayer player : players) {
                         var synced = PlayerTracker.getInstance().getSyncedChunks(player.getUUID());
                         if (synced == null) continue;
@@ -197,7 +202,6 @@ public final class ChunkGenerationManager {
                         ds.distanceGraph.collectCompletedInRange(player.chunkPosition(), radius, synced, syncBatch, 64);
                         
                         if (!syncBatch.isEmpty()) {
-                            workDispatched = true;
                             final List<ChunkPos> finalSyncBatch = new ArrayList<>(syncBatch);
                             final ServerLevel level = ds.level;
                             final UUID playerUUID = player.getUUID();
