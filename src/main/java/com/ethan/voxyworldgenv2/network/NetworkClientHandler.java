@@ -38,7 +38,6 @@ public class NetworkClientHandler {
         });
     }
 
-    @SuppressWarnings("unchecked")
     private static void handleLODData(NetworkHandler.LODDataPayload payload) {
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) return;
