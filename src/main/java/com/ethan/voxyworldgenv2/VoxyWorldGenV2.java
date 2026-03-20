@@ -1,6 +1,5 @@
 package com.ethan.voxyworldgenv2;
 
-import com.ethan.voxyworldgenv2.core.ChunkGenerationManager;
 import com.ethan.voxyworldgenv2.event.ServerEventHandler;
 import com.ethan.voxyworldgenv2.network.NetworkHandler;
 import net.fabricmc.api.ModInitializer;
