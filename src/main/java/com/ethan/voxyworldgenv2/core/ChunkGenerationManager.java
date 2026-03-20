@@ -141,12 +141,6 @@ public final class ChunkGenerationManager {
         workerRunning.set(false);
         if (workerThread != null) {
             workerThread.interrupt();
-            try {
-                // wait up to 5 seconds for worker to die
-                workerThread.join(5000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
             workerThread = null;
         }
     }
