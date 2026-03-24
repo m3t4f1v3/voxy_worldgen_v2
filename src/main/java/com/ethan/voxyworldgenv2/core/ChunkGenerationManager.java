@@ -217,6 +217,7 @@ public final class ChunkGenerationManager {
                                         LevelChunk c = level.getChunkSource().getChunk(syncPos.x, syncPos.z, false);
                                         if (c != null) {
                                             com.ethan.voxyworldgenv2.network.NetworkHandler.sendLODData(p, c);
+                                            synced.add(syncPos.toLong());
                                         }
                                         // if c == null the chunk is not loaded; the BlockUpdateMixin will
                                         // handle syncing it when it gets loaded into memory later
