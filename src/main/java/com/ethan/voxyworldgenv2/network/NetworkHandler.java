@@ -92,6 +92,17 @@ public class NetworkHandler {
         VoxyWorldGenV2.LOGGER.info("voxy networking initialized");
     }
 
+    private static void setSyncedState(ServerPlayer player, ChunkPos pos, boolean isSynced) {
+        var synced = PlayerTracker.getInstance().getSyncedChunks(player.getUUID());
+        if (synced != null) {
+            if (isSynced) {
+                synced.add(pos.toLong());
+            } else {
+                synced.remove(pos.toLong());
+            }
+        }
+    }
+
     public static void broadcastLODData(LevelChunk chunk) {
         ChunkPos pos = chunk.getPos();
         int minY = chunk.getMinSection();
@@ -137,25 +148,27 @@ public class NetworkHandler {
         }
         
         if (sections.isEmpty()) return;
-        
+
         LODDataPayload payload = new LODDataPayload(pos, minY, sections);
         
         double maxDistSq = 4096.0 * 4096.0;
         
         for (ServerPlayer player : PlayerTracker.getInstance().getPlayers()) {
-            if (player.level() != chunk.getLevel()) continue;
-            
             double dx = player.getX() - (pos.getMiddleBlockX());
             double dz = player.getZ() - (pos.getMiddleBlockZ());
-            if (dx * dx + dz * dz <= maxDistSq) {
-                ServerPlayNetworking.send(player, payload);
-                
-                // mark as synced for this player
-                var synced = PlayerTracker.getInstance().getSyncedChunks(player.getUUID());
-                if (synced != null) {
-                    synced.add(pos.toLong());
-                }
+            
+            if (player.level() != chunk.getLevel() || (dx * dx + dz * dz > maxDistSq)) {
+                setSyncedState(player, pos, false);
+                continue;
             }
+            
+            ServerPlayNetworking.send(player, payload);
+                
+            // // mark as synced for this player
+            // var synced = PlayerTracker.getInstance().getSyncedChunks(player.getUUID());
+            // if (synced != null) {
+            //     synced.add(pos.toLong());
+            // }
         }
     }
 
@@ -201,14 +214,14 @@ public class NetworkHandler {
             ));
         }
         
-        if (sections.isEmpty()) return;
+        if (sections.isEmpty()) {
+            setSyncedState(player, pos, false);
+            return;
+        }
         
         ServerPlayNetworking.send(player, new LODDataPayload(pos, minY, sections));
-        
-        var synced = PlayerTracker.getInstance().getSyncedChunks(player.getUUID());
-        if (synced != null) {
-            synced.add(pos.toLong());
-        }
+        // double check, could be deleted.
+        setSyncedState(player, pos, true);
     }
 
     public static void sendHandshake(ServerPlayer player) {

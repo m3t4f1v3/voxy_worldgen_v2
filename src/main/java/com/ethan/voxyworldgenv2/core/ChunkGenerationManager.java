@@ -202,6 +202,11 @@ public final class ChunkGenerationManager {
                             final List<ChunkPos> finalSyncBatch = new ArrayList<>(syncBatch);
                             final ServerLevel level = ds.level;
                             final UUID playerUUID = player.getUUID();
+                            // mark all as synced now so we don't retry unloaded chunks in a tight loop;
+                            // the block update mixin will re-sync them when they load naturally
+                            for (ChunkPos syncPos : finalSyncBatch) {
+                                synced.add(syncPos.toLong());
+                            }
                             server.execute(() -> {
                                 ServerPlayer p = server.getPlayerList().getPlayer(playerUUID);
                                 if (p != null) {
@@ -210,6 +215,8 @@ public final class ChunkGenerationManager {
                                         if (c != null) {
                                             com.ethan.voxyworldgenv2.network.NetworkHandler.sendLODData(p, c);
                                         }
+                                        // if c == null the chunk is not loaded; the BlockUpdateMixin will
+                                        // handle syncing it when it gets loaded into memory later
                                     }
                                 }
                             });
@@ -217,7 +224,10 @@ public final class ChunkGenerationManager {
                         }
                     }
                     
-                    if (workDispatched) continue; 
+                    if (workDispatched) {
+                        Thread.sleep(10); // small delay to prevent overwhelming network/server tasks
+                        continue; 
+                    }
                     
                     Thread.sleep(100);
                     continue;
@@ -543,9 +553,14 @@ public final class ChunkGenerationManager {
         configReloadScheduled.set(true);
     }
     
+    public boolean isChunkCompleted(net.minecraft.server.level.ServerLevel level, net.minecraft.world.level.ChunkPos pos) {
+        DimensionState state = dimensionStates.get(level.dimension());
+        return state != null && state.completedChunks.contains(pos.toLong());
+    }
+
     public GenerationStats getStats() { return stats; }
     public int getActiveTaskCount() { return activeTaskCount.get(); }
-    public int getRemainingInRadius() { 
+    public int getRemainingInRadius() {
         if (currentDimensionKey == null) return 0;
         DimensionState state = dimensionStates.get(currentDimensionKey);
         return state != null ? state.remainingInRadius.get() : 0; 
