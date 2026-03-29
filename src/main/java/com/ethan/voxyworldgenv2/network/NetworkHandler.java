@@ -95,6 +95,17 @@ public class NetworkHandler {
         }
     }
 
+    private static void sendLODPayload(ServerPlayer player, LODDataPayload payload) {
+        ByteBuf outRaw = Unpooled.buffer();
+        try {
+            FriendlyByteBuf outBuf = new FriendlyByteBuf(outRaw);
+            payload.write(outBuf);
+            ServerPlayNetworking.send(player, LOD_DATA_ID, new FriendlyByteBuf(outRaw.retainedDuplicate()));
+        } finally {
+            outRaw.release();
+        }
+    }
+
     public static void broadcastLODData(LevelChunk chunk) {
         ChunkPos pos = chunk.getPos();
         int minY = chunk.getMinBuildHeight();

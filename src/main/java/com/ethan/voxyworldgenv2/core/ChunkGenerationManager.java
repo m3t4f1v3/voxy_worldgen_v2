@@ -192,6 +192,7 @@ public final class ChunkGenerationManager {
                 
                 if (batch == null) {
                     // if no generation work, try to catch up on syncing for any player
+                    boolean workDispatched = false;
                     for (ServerPlayer player : players) {
                         var synced = PlayerTracker.getInstance().getSyncedChunks(player.getUUID());
                         if (synced == null) continue;
@@ -202,6 +203,7 @@ public final class ChunkGenerationManager {
                         ds.distanceGraph.collectCompletedInRange(player.chunkPosition(), radius, synced, syncBatch, 64);
                         
                         if (!syncBatch.isEmpty()) {
+                            workDispatched = true;
                             final List<ChunkPos> finalSyncBatch = new ArrayList<>(syncBatch);
                             final ServerLevel level = ds.level;
                             final UUID playerUUID = player.getUUID();
@@ -557,11 +559,6 @@ public final class ChunkGenerationManager {
     }
 
     public boolean isChunkCompleted(ServerLevel level, ChunkPos pos) {
-        DimensionState state = dimensionStates.get(level.dimension());
-        return state != null && state.completedChunks.contains(pos.toLong());
-    }
-    
-    public boolean isChunkCompleted(net.minecraft.server.level.ServerLevel level, net.minecraft.world.level.ChunkPos pos) {
         DimensionState state = dimensionStates.get(level.dimension());
         return state != null && state.completedChunks.contains(pos.toLong());
     }
