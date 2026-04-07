@@ -15,6 +15,7 @@ public final class VoxyIntegration {
     private static MethodHandle ingestMethod;
     private static MethodHandle rawIngestMethod;
     private static MethodHandle worldIdentifierOfMethod;
+    private static MethodHandle voxyEnabledMethod;
 
     private VoxyIntegration() {}
 
@@ -70,7 +71,32 @@ public final class VoxyIntegration {
                 worldIdentifierOfMethod = lookup.unreflect(ofMethod);
             } catch (NoSuchMethodException ignored) {}
 
-            VoxyWorldGenV2.LOGGER.info("voxy integration initialized (enabled: {}, raw: {})", enabled, rawIngestMethod != null);
+            // find voxy enabled/active state method
+            try {
+                Class<?> voxyConfigClass = Class.forName("me.cortex.voxy.client.config.VoxyConfig");
+                try {
+                    Method isEnabledMethod = voxyConfigClass.getMethod("isEnabled");
+                    voxyEnabledMethod = lookup.unreflect(isEnabledMethod);
+                } catch (NoSuchMethodException ignored) {
+                    // try field-based approach
+                    try {
+                        Field enabledField = voxyConfigClass.getDeclaredField("enabled");
+                        enabledField.setAccessible(true);
+                        voxyEnabledMethod = lookup.unreflectGetter(enabledField);
+                    } catch (Exception ignored2) {}
+                }
+            } catch (ClassNotFoundException ignored) {
+                // try alternate class names
+                try {
+                    Class<?> voxyClientClass = Class.forName("me.cortex.voxy.client.VoxyClient");
+                    try {
+                        Method isEnabledMethod = voxyClientClass.getMethod("isEnabled");
+                        voxyEnabledMethod = lookup.unreflect(isEnabledMethod);
+                    } catch (NoSuchMethodException ignored2) {}
+                } catch (ClassNotFoundException ignored3) {}
+            }
+
+            VoxyWorldGenV2.LOGGER.info("voxy integration initialized (enabled: {}, raw: {}, voxyEnabled: {})", enabled, rawIngestMethod != null, voxyEnabledMethod != null);
 
         } catch (ClassNotFoundException e) {
             VoxyWorldGenV2.LOGGER.info("voxy not present, integration disabled");
@@ -138,5 +164,16 @@ public final class VoxyIntegration {
     public static boolean isVoxyAvailable() {
         if (!initialized) initialize();
         return enabled;
+    }
+
+    public static boolean isVoxyRenderingEnabled() {
+        if (!initialized) initialize();
+        if (!enabled) return true; // voxy not present, don't suppress generation
+        if (voxyEnabledMethod == null) return true; // can't determine state, assume enabled
+        try {
+            Object result = voxyEnabledMethod.invoke();
+            if (result instanceof Boolean b) return b;
+        } catch (Throwable ignored) {}
+        return true;
     }
 }
