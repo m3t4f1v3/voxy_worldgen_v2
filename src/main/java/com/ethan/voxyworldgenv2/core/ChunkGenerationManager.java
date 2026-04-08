@@ -366,7 +366,11 @@ public final class ChunkGenerationManager {
                 }
 
                 if (!readyToGenerate.isEmpty()) {
-                    server.execute(() -> {
+                    final MinecraftServer execServer = this.server;
+                    if (execServer == null || !running.get()) {
+                        continue;
+                    }
+                    execServer.execute(() -> {
                         ServerChunkCache cache = finalState.level.getChunkSource();
                         List<ChunkPos> actuallyGenerate = new ArrayList<>();
                         
@@ -390,8 +394,12 @@ public final class ChunkGenerationManager {
                             processPendingTickets();
 
                             for (ChunkPos pos : actuallyGenerate) {
-                                ((ServerChunkCacheMixin) cache).invokeGetChunkFutureMainThread(pos.x, pos.z, ChunkStatus.FULL, true)
-                                    .whenCompleteAsync((result, throwable) -> {
+                                final MinecraftServer callbackServer = this.server;
+                                var future = ((ServerChunkCacheMixin) cache)
+                                    .invokeGetChunkFutureMainThread(pos.x, pos.z, ChunkStatus.FULL, true);
+
+                                if (callbackServer != null) {
+                                    future.whenCompleteAsync((result, throwable) -> {
                                         if (throwable == null && result != null && result.isSuccess() && result.orElse(null) instanceof LevelChunk chunk) {
                                             onSuccess(finalState, pos);
                                             if (!chunk.isEmpty()) {
@@ -402,7 +410,21 @@ public final class ChunkGenerationManager {
                                             onFailure(finalState, pos);
                                         }
                                         cleanupTask(finalState.level, pos);
-                                    }, server);
+                                    }, callbackServer);
+                                } else {
+                                    future.whenComplete((result, throwable) -> {
+                                        if (throwable == null && result != null && result.isSuccess() && result.orElse(null) instanceof LevelChunk chunk) {
+                                            onSuccess(finalState, pos);
+                                            if (!chunk.isEmpty()) {
+                                                VoxyIntegration.ingestChunk(chunk);
+                                                com.ethan.voxyworldgenv2.network.NetworkHandler.broadcastLODData(chunk);
+                                            }
+                                        } else {
+                                            onFailure(finalState, pos);
+                                        }
+                                        cleanupTask(finalState.level, pos);
+                                    });
+                                }
                             }
                         }
                     });

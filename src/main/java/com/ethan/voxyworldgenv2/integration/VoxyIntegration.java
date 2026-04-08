@@ -1,6 +1,8 @@
 package com.ethan.voxyworldgenv2.integration;
 
 import com.ethan.voxyworldgenv2.VoxyWorldGenV2;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.world.level.chunk.LevelChunk;
 
 import java.lang.invoke.MethodHandle;
@@ -71,29 +73,31 @@ public final class VoxyIntegration {
                 worldIdentifierOfMethod = lookup.unreflect(ofMethod);
             } catch (NoSuchMethodException ignored) {}
 
-            // find voxy enabled/active state method
-            try {
-                Class<?> voxyConfigClass = Class.forName("me.cortex.voxy.client.config.VoxyConfig");
+            // find voxy enabled/active state method (client-side only, to avoid loading LWJGL on servers)
+            if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
                 try {
-                    Method isEnabledMethod = voxyConfigClass.getMethod("isEnabled");
-                    voxyEnabledMethod = lookup.unreflect(isEnabledMethod);
-                } catch (NoSuchMethodException ignored) {
-                    // try field-based approach
+                    Class<?> voxyConfigClass = Class.forName("me.cortex.voxy.client.config.VoxyConfig");
                     try {
-                        Field enabledField = voxyConfigClass.getDeclaredField("enabled");
-                        enabledField.setAccessible(true);
-                        voxyEnabledMethod = lookup.unreflectGetter(enabledField);
-                    } catch (Exception ignored2) {}
-                }
-            } catch (ClassNotFoundException ignored) {
-                // try alternate class names
-                try {
-                    Class<?> voxyClientClass = Class.forName("me.cortex.voxy.client.VoxyClient");
-                    try {
-                        Method isEnabledMethod = voxyClientClass.getMethod("isEnabled");
+                        Method isEnabledMethod = voxyConfigClass.getMethod("isEnabled");
                         voxyEnabledMethod = lookup.unreflect(isEnabledMethod);
-                    } catch (NoSuchMethodException ignored2) {}
-                } catch (ClassNotFoundException ignored3) {}
+                    } catch (NoSuchMethodException ignored) {
+                        // try field-based approach
+                        try {
+                            Field enabledField = voxyConfigClass.getDeclaredField("enabled");
+                            enabledField.setAccessible(true);
+                            voxyEnabledMethod = lookup.unreflectGetter(enabledField);
+                        } catch (Exception ignored2) {}
+                    }
+                } catch (ClassNotFoundException ignored) {
+                    // try alternate class names
+                    try {
+                        Class<?> voxyClientClass = Class.forName("me.cortex.voxy.client.VoxyClient");
+                        try {
+                            Method isEnabledMethod = voxyClientClass.getMethod("isEnabled");
+                            voxyEnabledMethod = lookup.unreflect(isEnabledMethod);
+                        } catch (NoSuchMethodException ignored2) {}
+                    } catch (ClassNotFoundException ignored3) {}
+                }
             }
 
             VoxyWorldGenV2.LOGGER.info("voxy integration initialized (enabled: {}, raw: {}, voxyEnabled: {})", enabled, rawIngestMethod != null, voxyEnabledMethod != null);

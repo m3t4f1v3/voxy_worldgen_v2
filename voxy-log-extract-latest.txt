@@ -1,0 +1,130 @@
+=== file: C:\Users\szabo\Downloads\logs\latest.log
+C:\Users\szabo\Downloads\logs\latest.log:1464:[08Apr2026 15:08:22.486] [main/INFO] [voxyworldgenv2/]: voxy world gen v2 initializing
+C:\Users\szabo\Downloads\logs\latest.log:1465:[08Apr2026 15:08:22.493] [main/INFO] [voxyworldgenv2/]: voxy networking initialized
+C:\Users\szabo\Downloads\logs\latest.log:14314:[08Apr2026 15:09:56.795] [Server thread/WARN] [voxyworldgenv2/]: tellus not found for sampling integration: com.yucareux.tellus.worldgen.EarthChunkGenerator
+C:\Users\szabo\Downloads\logs\latest.log:14315:[08Apr2026 15:09:56.805] [Server thread/WARN] [voxyworldgenv2/]: failed to initialize voxy ingester reflection: me.cortex.voxy.common.world.other.Mapper.withBlockBiome(long,int,int)
+C:\Users\szabo\Downloads\logs\latest.log:14316:[08Apr2026 15:09:56.806] [Server thread/INFO] [voxyworldgenv2/]: tellus integration hub initialized (2 workers)
+C:\Users\szabo\Downloads\logs\latest.log:14317:[08Apr2026 15:09:56.807] [Server thread/INFO] [voxyworldgenv2/]: loaded 0 chunks from voxy generation cache for ResourceKey[minecraft:dimension / minecraft:overworld]
+C:\Users\szabo\Downloads\logs\latest.log:14396:[08Apr2026 15:10:12.549] [Server thread/INFO] [voxyworldgenv2/]: server started, initializing manager
+C:\Users\szabo\Downloads\logs\latest.log:14397:[08Apr2026 15:10:12.549] [Server thread/INFO] [voxyworldgenv2/]: voxy world gen initialized
+C:\Users\szabo\Downloads\logs\latest.log:14398:[08Apr2026 15:10:12.550] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker idle: no tracked players connected
+^^^ (×3)
+C:\Users\szabo\Downloads\logs\latest.log:14445:[08Apr2026 15:10:48.561] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×56)
+C:\Users\szabo\Downloads\logs\latest.log:14518:[08Apr2026 15:10:51.500] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:14519:[08Apr2026 15:10:51.564] [Server thread/INFO] [voxyworldgenv2/]: voxy integration initialized (enabled: true, raw: true, voxyEnabled: false)
+C:\Users\szabo\Downloads\logs\latest.log:14520:[08Apr2026 15:10:52.597] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×357)
+C:\Users\szabo\Downloads\logs\latest.log:15061:[08Apr2026 15:11:14.439] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:15202:[08Apr2026 15:11:15.440] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×307)
+C:\Users\szabo\Downloads\logs\latest.log:15710:[08Apr2026 15:11:32.190] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:15741:[08Apr2026 15:11:32.690] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×280)
+C:\Users\szabo\Downloads\logs\latest.log:16178:[08Apr2026 15:11:49.855] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:16205:[08Apr2026 15:11:50.855] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×236)
+C:\Users\szabo\Downloads\logs\latest.log:16567:[08Apr2026 15:12:05.596] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:16568:[08Apr2026 15:12:06.096] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×259)
+C:\Users\szabo\Downloads\logs\latest.log:17025:[08Apr2026 15:12:23.896] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:17044:[08Apr2026 15:12:24.898] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×232)
+C:\Users\szabo\Downloads\logs\latest.log:17398:[08Apr2026 15:12:41.341] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:17399:[08Apr2026 15:12:41.842] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×223)
+C:\Users\szabo\Downloads\logs\latest.log:17734:[08Apr2026 15:12:57.729] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:17738:[08Apr2026 15:12:58.229] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×219)
+C:\Users\szabo\Downloads\logs\latest.log:18052:[08Apr2026 15:13:14.424] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:18063:[08Apr2026 15:13:15.424] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×356)
+C:\Users\szabo\Downloads\logs\latest.log:18521:[08Apr2026 15:13:41.024] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:18522:[08Apr2026 15:13:41.526] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×220)
+C:\Users\szabo\Downloads\logs\latest.log:18815:[08Apr2026 15:13:59.121] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:18816:[08Apr2026 15:14:00.123] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×245)
+C:\Users\szabo\Downloads\logs\latest.log:19209:[08Apr2026 15:14:16.828] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:19210:[08Apr2026 15:14:17.328] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×234)
+C:\Users\szabo\Downloads\logs\latest.log:19475:[08Apr2026 15:14:34.440] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:19476:[08Apr2026 15:14:34.941] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×186)
+C:\Users\szabo\Downloads\logs\latest.log:19678:[08Apr2026 15:14:49.804] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:19679:[08Apr2026 15:14:50.304] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×240)
+C:\Users\szabo\Downloads\logs\latest.log:19978:[08Apr2026 15:15:06.268] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:20036:[08Apr2026 15:15:07.771] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×180)
+C:\Users\szabo\Downloads\logs\latest.log:20234:[08Apr2026 15:15:21.431] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\latest.log:20235:[08Apr2026 15:15:22.431] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×64)
+C:\Users\szabo\Downloads\logs\latest.log:20318:[08Apr2026 15:15:31.588] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker idle: no tracked players connected
+C:\Users\szabo\Downloads\logs\latest.log:20321:[08Apr2026 15:15:39.069] [Server thread/INFO] [voxyworldgenv2/]: server stopping, shutting down manager
+
+=== file: C:\Users\szabo\Downloads\logs\debug.log
+C:\Users\szabo\Downloads\logs\debug.log:22022:[08Apr2026 15:08:22.486] [main/INFO] [voxyworldgenv2/]: voxy world gen v2 initializing
+C:\Users\szabo\Downloads\logs\debug.log:22023:[08Apr2026 15:08:22.493] [main/INFO] [voxyworldgenv2/]: voxy networking initialized
+C:\Users\szabo\Downloads\logs\debug.log:50131:[08Apr2026 15:09:56.795] [Server thread/WARN] [voxyworldgenv2/]: tellus not found for sampling integration: com.yucareux.tellus.worldgen.EarthChunkGenerator
+C:\Users\szabo\Downloads\logs\debug.log:50132:[08Apr2026 15:09:56.805] [Server thread/WARN] [voxyworldgenv2/]: failed to initialize voxy ingester reflection: me.cortex.voxy.common.world.other.Mapper.withBlockBiome(long,int,int)
+C:\Users\szabo\Downloads\logs\debug.log:50133:[08Apr2026 15:09:56.806] [Server thread/INFO] [voxyworldgenv2/]: tellus integration hub initialized (2 workers)
+C:\Users\szabo\Downloads\logs\debug.log:50134:[08Apr2026 15:09:56.807] [Server thread/INFO] [voxyworldgenv2/]: loaded 0 chunks from voxy generation cache for ResourceKey[minecraft:dimension / minecraft:overworld]
+C:\Users\szabo\Downloads\logs\debug.log:63531:[08Apr2026 15:10:12.549] [Server thread/INFO] [voxyworldgenv2/]: server started, initializing manager
+C:\Users\szabo\Downloads\logs\debug.log:63532:[08Apr2026 15:10:12.549] [Server thread/INFO] [voxyworldgenv2/]: voxy world gen initialized
+C:\Users\szabo\Downloads\logs\debug.log:63533:[08Apr2026 15:10:12.550] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker idle: no tracked players connected
+^^^ (×3)
+C:\Users\szabo\Downloads\logs\debug.log:69232:[08Apr2026 15:10:48.561] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×56)
+C:\Users\szabo\Downloads\logs\debug.log:69334:[08Apr2026 15:10:51.500] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:69337:[08Apr2026 15:10:51.564] [Server thread/INFO] [voxyworldgenv2/]: voxy integration initialized (enabled: true, raw: true, voxyEnabled: false)
+C:\Users\szabo\Downloads\logs\debug.log:69347:[08Apr2026 15:10:52.597] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×357)
+C:\Users\szabo\Downloads\logs\debug.log:69891:[08Apr2026 15:11:14.439] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:70032:[08Apr2026 15:11:15.440] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×307)
+C:\Users\szabo\Downloads\logs\debug.log:70570:[08Apr2026 15:11:32.190] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:70601:[08Apr2026 15:11:32.690] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×280)
+C:\Users\szabo\Downloads\logs\debug.log:71038:[08Apr2026 15:11:49.855] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:71065:[08Apr2026 15:11:50.855] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×236)
+C:\Users\szabo\Downloads\logs\debug.log:71427:[08Apr2026 15:12:05.596] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:71428:[08Apr2026 15:12:06.096] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×259)
+C:\Users\szabo\Downloads\logs\debug.log:71887:[08Apr2026 15:12:23.896] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:71906:[08Apr2026 15:12:24.898] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×232)
+C:\Users\szabo\Downloads\logs\debug.log:72265:[08Apr2026 15:12:41.341] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:72266:[08Apr2026 15:12:41.842] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×223)
+C:\Users\szabo\Downloads\logs\debug.log:72603:[08Apr2026 15:12:57.729] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:72607:[08Apr2026 15:12:58.229] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×219)
+C:\Users\szabo\Downloads\logs\debug.log:72923:[08Apr2026 15:13:14.424] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:72934:[08Apr2026 15:13:15.424] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×356)
+C:\Users\szabo\Downloads\logs\debug.log:73398:[08Apr2026 15:13:41.024] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:73399:[08Apr2026 15:13:41.526] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×220)
+C:\Users\szabo\Downloads\logs\debug.log:73695:[08Apr2026 15:13:59.121] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:73696:[08Apr2026 15:14:00.123] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×245)
+C:\Users\szabo\Downloads\logs\debug.log:74092:[08Apr2026 15:14:16.828] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:74093:[08Apr2026 15:14:17.328] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×234)
+C:\Users\szabo\Downloads\logs\debug.log:74360:[08Apr2026 15:14:34.440] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:74361:[08Apr2026 15:14:34.941] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×186)
+C:\Users\szabo\Downloads\logs\debug.log:74565:[08Apr2026 15:14:49.804] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:74566:[08Apr2026 15:14:50.304] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×240)
+C:\Users\szabo\Downloads\logs\debug.log:75057:[08Apr2026 15:15:06.268] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:75302:[08Apr2026 15:15:07.771] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×180)
+C:\Users\szabo\Downloads\logs\debug.log:75501:[08Apr2026 15:15:21.431] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker paused: tps throttled or pauseCheck active
+C:\Users\szabo\Downloads\logs\debug.log:75503:[08Apr2026 15:15:22.431] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker generation dispatch: 16 chunks near player abc in minecraft:overworld
+^^^ (×64)
+C:\Users\szabo\Downloads\logs\debug.log:75593:[08Apr2026 15:15:31.588] [Voxy-WorldGen-Worker/INFO] [voxyworldgenv2/]: worker idle: no tracked players connected
+C:\Users\szabo\Downloads\logs\debug.log:75596:[08Apr2026 15:15:39.069] [Server thread/INFO] [voxyworldgenv2/]: server stopping, shutting down manager
+

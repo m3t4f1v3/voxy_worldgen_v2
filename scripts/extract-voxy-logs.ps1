@@ -58,7 +58,8 @@ foreach ($name in $files) {
     $results.Add("=== file: $path")
 
     if (Get-Command rg -ErrorAction SilentlyContinue) {
-        $rgOut = rg -n -i -C $Context $regex $path
+        # rg: no context (to preserve consecutiveness for deduplication)
+        $rgOut = rg -n -i $regex $path
         if ($LASTEXITCODE -eq 0 -and $rgOut) {
             foreach ($line in $rgOut) {
                 $results.Add($line)
@@ -67,18 +68,13 @@ foreach ($name in $files) {
             $results.Add("(no matches)")
         }
     } else {
-        $matches = Select-String -Path $path -Pattern $regex -CaseSensitive:$false -Context $Context, $Context
+        # Select-String fallback: just matches, no context (to preserve consecutiveness)
+        $matches = Select-String -Path $path -Pattern $regex -CaseSensitive:$false
         if (-not $matches) {
             $results.Add("(no matches)")
         } else {
             foreach ($m in $matches) {
-                foreach ($pre in $m.Context.PreContext) {
-                    $results.Add($pre)
-                }
                 $results.Add("$($m.Path):$($m.LineNumber):$($m.Line)")
-                foreach ($post in $m.Context.PostContext) {
-                    $results.Add($post)
-                }
             }
         }
     }
@@ -96,10 +92,106 @@ if ($IncludeGz) {
     }
 }
 
+# Compact consecutive identical log lines (ignoring timestamps)
+$compacted = New-Object System.Collections.Generic.List[string]
+$previousKey = $null
+$duplicateCount = 0
+
+foreach ($line in $results) {
+    # Skip section headers and empty lines
+    if ($line -match "^(===|---|)") {
+        if ($duplicateCount -gt 1) {
+            $compacted.Add("^^^ (×$duplicateCount)")
+        }
+        $compacted.Add($line)
+        $previousKey = $null
+        $duplicateCount = 0
+        continue
+    }
+
+    if ([string]::IsNullOrWhiteSpace($line)) {
+        if ($duplicateCount -gt 1) {
+            $compacted.Add("^^^ (×$duplicateCount)")
+        }
+        $compacted.Add($line)
+        $previousKey = $null
+        $duplicateCount = 0
+        continue
+    }
+
+    # Extract message without filepath prefix and timestamp
+    # Remove everything up to and including the final ]: pattern
+    $key = ($line -replace ".*\]:\s*", "").Trim()
+    
+    if ($key -eq $previousKey) {
+        $duplicateCount++
+    } else {
+        if ($duplicateCount -gt 1) {
+            $compacted.Add("^^^ (×$duplicateCount)")
+        }
+        $compacted.Add($line)
+        $previousKey = $key
+        $duplicateCount = 1
+    }
+}
+
+# Compact consecutive identical log lines by grouping and outputting counts
+$final = @()
+$skipGroup = $false
+$groupedLines = @()
+
+foreach ($line in $compacted) {
+    # Always output headers/markers directly
+    if ($line -match "^(===|---|^\^\^\^)" -or [string]::IsNullOrWhiteSpace($line)) {
+        # Output any pending group first
+        if ($groupedLines.Count -gt 0) {
+            if ($groupedLines.Count -gt 1) {
+                $final += $groupedLines[0]
+                $final += "^^^ (×$($groupedLines.Count))"
+            } else {
+                $final += $groupedLines[0]
+            }
+            $groupedLines = @()
+        }
+        $final += $line
+    } else {
+        # Extract message for grouping
+        $msg = $line -replace ".*]:\s*", ""
+        
+        # If this message differs from previous group, flush the old group
+        if ($groupedLines.Count -gt 0) {
+            $lastMsg = $groupedLines[0] -replace ".*]:\s*", ""
+            if ($msg -ne $lastMsg) {
+                # Different message, flush old group
+                if ($groupedLines.Count -gt 1) {
+                    $final += $groupedLines[0]
+                    $final += "^^^ (×$($groupedLines.Count))"  
+                } else {
+                    $final += $groupedLines[0]
+                }
+                $groupedLines = @()
+            }
+        }
+        
+        # Add to current group
+        $groupedLines += $line
+    }
+}
+
+# Handle final group
+if ($groupedLines.Count -gt 0) {
+    if ($groupedLines.Count -gt 1) {
+        $final += $groupedLines[0]
+        $final += "^^^ (×$($groupedLines.Count))"
+    } else {
+        $final += $groupedLines[0]
+    }
+}
+
 if ([string]::IsNullOrWhiteSpace($OutFile)) {
     $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
     $OutFile = Join-Path $PWD "voxy-log-extract-$timestamp.txt"
 }
 
-$results | Set-Content -LiteralPath $OutFile -Encoding UTF8
+$final | Set-Content -LiteralPath $OutFile -Encoding UTF8
 Write-Output "Wrote extract: $OutFile"
