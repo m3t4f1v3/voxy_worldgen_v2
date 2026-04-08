@@ -6,6 +6,8 @@ import com.ethan.voxyworldgenv2.integration.tellus.TellusIntegration;
 
 import com.ethan.voxyworldgenv2.mixin.ServerChunkCacheMixin;
 import com.ethan.voxyworldgenv2.stats.GenerationStats;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerChunkCache;
@@ -70,6 +72,8 @@ public final class ChunkGenerationManager {
     private ServerLevel currentLevel = null;
     private final java.util.Map<java.util.UUID, ChunkPos> lastPlayerPositions = new java.util.concurrent.ConcurrentHashMap<>();
     private java.util.function.BooleanSupplier pauseCheck = () -> false;
+    private volatile long lastFlowLogAt = 0L;
+    private volatile String lastFlowLogKey = "";
 
     // worker
     private Thread workerThread;
@@ -86,11 +90,33 @@ public final class ChunkGenerationManager {
     }
 
     private DimensionState getOrSetupState(ServerLevel level) {
-        return dimensionStates.computeIfAbsent(level.dimension(), k -> {
-            DimensionState state = new DimensionState(level);
-            state.tellusActive = TellusIntegration.isTellusWorld(level);
-            return state;
+        DimensionState state = dimensionStates.computeIfAbsent(level.dimension(), k -> {
+            DimensionState createdState = new DimensionState(level);
+            createdState.tellusActive = TellusIntegration.isTellusWorld(level);
+            return createdState;
         });
+        ensureStateLoaded(level, state);
+        return state;
+    }
+
+    private void ensureStateLoaded(ServerLevel level, DimensionState state) {
+        if (state.loaded) return;
+        synchronized (state) {
+            if (state.loaded) return;
+
+            if (state.tellusActive) {
+                VoxyWorldGenV2.LOGGER.info("tellus world detected for {}, enabling fast generation", level.dimension());
+            }
+
+            ChunkPersistence.load(level, level.dimension(), state.completedChunks);
+            synchronized (state.completedChunks) {
+                for (long pos : state.completedChunks) {
+                    state.distanceGraph.markChunkCompleted(ChunkPos.getX(pos), ChunkPos.getZ(pos));
+                }
+            }
+
+            state.loaded = true;
+        }
     }
 
     public ServerLevel getCurrentLevel() {
@@ -148,28 +174,33 @@ public final class ChunkGenerationManager {
         while (workerRunning.get() && running.get()) {
             try {
                 if (!Config.DATA.enabled || server == null) {
+                    logFlowStatus("disabled_or_no_server", "worker idle: generation disabled or server is null");
                     Thread.sleep(100);
                     continue;
                 }
 
-                if (!VoxyIntegration.isVoxyRenderingEnabled()) {
+                if (isGenerationPausedByVoxySetting()) {
+                    logFlowStatus("paused_by_voxy_setting", "worker paused: voxy render setting gate is active");
                     Thread.sleep(500);
                     continue;
                 }
 
                 if (tpsMonitor.isThrottled() || pauseCheck.getAsBoolean()) {
+                    logFlowStatus("paused_by_tps_or_game", "worker paused: tps throttled or pauseCheck active");
                     Thread.sleep(500);
                     continue;
                 }
                 
                 var players = new ArrayList<>(PlayerTracker.getInstance().getPlayers());
                 if (players.isEmpty()) {
+                    logFlowStatus("no_players", "worker idle: no tracked players connected");
                     Thread.sleep(1000);
                     continue;
                 }
                 
                 List<ChunkPos> batch = null;
                 DimensionState activeState = null;
+                ServerPlayer selectedPlayer = null;
                 
                 // try to find work around any player in their respective dimension
                 for (ServerPlayer player : players) {
@@ -178,6 +209,7 @@ public final class ChunkGenerationManager {
                     batch = ds.distanceGraph.findWork(player.chunkPosition(), radius, ds.trackedBatches);
                     if (batch != null) {
                         activeState = ds;
+                        selectedPlayer = player;
                         break;
                     }
                 }
@@ -195,25 +227,55 @@ public final class ChunkGenerationManager {
                         ds.distanceGraph.collectCompletedInRange(player.chunkPosition(), radius, synced, syncBatch, 64);
                         
                         if (!syncBatch.isEmpty()) {
+                            if (Config.DATA.enableFlowLogs) {
+                                VoxyWorldGenV2.LOGGER.info(
+                                    "worker sync dispatch: {} completed chunks for player {} in {}",
+                                    syncBatch.size(),
+                                    player.getGameProfile().getName(),
+                                    ds.level.dimension().location()
+                                );
+                            }
                             workDispatched = true;
                             final List<ChunkPos> finalSyncBatch = new ArrayList<>(syncBatch);
                             final ServerLevel level = ds.level;
                             final UUID playerUUID = player.getUUID();
-                            // mark all as synced now so we don't retry unloaded chunks in a tight loop;
-                            // the block update mixin will re-sync them when they load naturally
-                            for (ChunkPos syncPos : finalSyncBatch) {
-                                synced.add(syncPos.toLong());
-                            }
                             server.execute(() -> {
                                 ServerPlayer p = server.getPlayerList().getPlayer(playerUUID);
                                 if (p != null) {
+                                    ServerChunkCache cache = level.getChunkSource();
+                                    List<ChunkPos> toLoadAndSend = new ArrayList<>();
                                     for (ChunkPos syncPos : finalSyncBatch) {
-                                        LevelChunk c = level.getChunkSource().getChunk(syncPos.x, syncPos.z, false);
+                                        if (!synced.add(syncPos.toLong())) continue;
+
+                                        LevelChunk c = cache.getChunk(syncPos.x, syncPos.z, false);
                                         if (c != null) {
                                             com.ethan.voxyworldgenv2.network.NetworkHandler.sendLODData(p, c);
+                                        } else {
+                                            // completed chunk exists in cache but isn't loaded: load it so we can stream LOD now.
+                                            queueTicketAdd(level, syncPos);
+                                            toLoadAndSend.add(syncPos);
                                         }
-                                        // if c == null the chunk is not loaded; the BlockUpdateMixin will
-                                        // handle syncing it when it gets loaded into memory later
+                                    }
+
+                                    if (!toLoadAndSend.isEmpty()) {
+                                        processPendingTickets();
+
+                                        for (ChunkPos syncPos : toLoadAndSend) {
+                                            ((ServerChunkCacheMixin) cache).invokeGetChunkFutureMainThread(syncPos.x, syncPos.z, ChunkStatus.FULL, true)
+                                                .whenCompleteAsync((result, throwable) -> {
+                                                    try {
+                                                        ServerPlayer target = server.getPlayerList().getPlayer(playerUUID);
+                                                        if (throwable == null && result != null && result.isSuccess() && result.orElse(null) instanceof LevelChunk chunk && target != null) {
+                                                            com.ethan.voxyworldgenv2.network.NetworkHandler.sendLODData(target, chunk);
+                                                        } else {
+                                                            // allow retries if loading/sending failed
+                                                            synced.remove(syncPos.toLong());
+                                                        }
+                                                    } finally {
+                                                        queueTicketRemove(level, syncPos);
+                                                    }
+                                                }, server);
+                                        }
                                     }
                                 }
                             });
@@ -225,9 +287,20 @@ public final class ChunkGenerationManager {
                         Thread.sleep(10); // small delay to prevent overwhelming network/server tasks
                         continue; 
                     }
+
+                    logFlowStatus("no_generation_or_sync_work", "worker idle: no generation or sync work found for tracked players");
                     
                     Thread.sleep(100);
                     continue;
+                }
+
+                if (Config.DATA.enableFlowLogs && selectedPlayer != null && activeState != null) {
+                    VoxyWorldGenV2.LOGGER.info(
+                        "worker generation dispatch: {} chunks near player {} in {}",
+                        batch.size(),
+                        selectedPlayer.getGameProfile().getName(),
+                        activeState.level.dimension().location()
+                    );
                 }
                 
                 final DimensionState finalState = activeState;
@@ -345,6 +418,16 @@ public final class ChunkGenerationManager {
         }
     }
 
+    private void logFlowStatus(String key, String message) {
+        if (!Config.DATA.enableFlowLogs) return;
+        long now = System.currentTimeMillis();
+        if (!key.equals(lastFlowLogKey) || now - lastFlowLogAt >= 15_000L) {
+            VoxyWorldGenV2.LOGGER.info(message);
+            lastFlowLogKey = key;
+            lastFlowLogAt = now;
+        }
+    }
+
     public void tick() {
         if (!running.get() || server == null) return;
         
@@ -428,6 +511,14 @@ public final class ChunkGenerationManager {
         return (double) dx * dx + dz * dz;
     }
 
+    private boolean isGenerationPausedByVoxySetting() {
+        // Dedicated servers should not depend on a client renderer toggle.
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
+            return false;
+        }
+        return !VoxyIntegration.isVoxyRenderingEnabled();
+    }
+
     private void setupLevel(ServerLevel newLevel) {
         if (currentLevel != null && currentDimensionKey != null) {
             DimensionState oldState = dimensionStates.get(currentDimensionKey);
@@ -439,21 +530,18 @@ public final class ChunkGenerationManager {
         currentLevel = newLevel;
         currentDimensionKey = newLevel.dimension();
         DimensionState state = getOrSetupState(newLevel);
-        
-        if (!state.loaded) {
-            if (state.tellusActive) {
-                VoxyWorldGenV2.LOGGER.info("tellus world detected for {}, enabling fast generation", currentDimensionKey);
-            }
-            ChunkPersistence.load(newLevel, currentDimensionKey, state.completedChunks);
-            synchronized(state.completedChunks) {
-                for (long pos : state.completedChunks) {
-                    state.distanceGraph.markChunkCompleted(ChunkPos.getX(pos), ChunkPos.getZ(pos));
-                }
-            }
-            state.loaded = true;
-        }
-        
+
         restartScan();
+    }
+
+    public void markChunkCompletedFromLoad(ServerLevel level, LevelChunk chunk) {
+        if (level == null || chunk == null || chunk.isEmpty()) return;
+
+        DimensionState state = getOrSetupState(level);
+        long key = chunk.getPos().toLong();
+        if (state.completedChunks.add(key)) {
+            state.distanceGraph.markChunkCompleted(chunk.getPos().x, chunk.getPos().z);
+        }
     }
     
     private void restartScan() {

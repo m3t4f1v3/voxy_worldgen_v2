@@ -43,6 +43,7 @@ public final class ServerEventHandler {
         // neighbor context (fixes hard snow/biome blend edges on new worlds, issue #40).
         // also handles syncing pre-generated chunks that couldn't be sent at generation
         // time because the player wasn't loaded yet (issue #50).
+        ChunkGenerationManager.getInstance().markChunkCompletedFromLoad(level, chunk);
         for (ServerPlayer player : PlayerTracker.getInstance().getPlayers()) {
             if (player.level() == level) {
                 NetworkHandler.sendLODData(player, chunk);
