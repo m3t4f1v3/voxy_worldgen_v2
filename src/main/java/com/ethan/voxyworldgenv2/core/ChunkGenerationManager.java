@@ -197,6 +197,8 @@ public final class ChunkGenerationManager {
                     Thread.sleep(1000);
                     continue;
                 }
+
+                boolean syncDispatched = dispatchSyncWork(players);
                 
                 List<ChunkPos> batch = null;
                 DimensionState activeState = null;
@@ -215,75 +217,7 @@ public final class ChunkGenerationManager {
                 }
                 
                 if (batch == null) {
-                    // if no generation work, try to catch up on syncing for any player
-                    boolean workDispatched = false;
-                    for (ServerPlayer player : players) {
-                        var synced = PlayerTracker.getInstance().getSyncedChunks(player.getUUID());
-                        if (synced == null) continue;
-                        
-                        DimensionState ds = getOrSetupState((ServerLevel) player.level());
-                        int radius = ds.tellusActive ? Math.max(Config.DATA.generationRadius, 128) : Config.DATA.generationRadius;
-                        List<ChunkPos> syncBatch = new ArrayList<>();
-                        ds.distanceGraph.collectCompletedInRange(player.chunkPosition(), radius, synced, syncBatch, 64);
-                        
-                        if (!syncBatch.isEmpty()) {
-                            if (Config.DATA.enableFlowLogs) {
-                                VoxyWorldGenV2.LOGGER.info(
-                                    "worker sync dispatch: {} completed chunks for player {} in {}",
-                                    syncBatch.size(),
-                                    player.getGameProfile().getName(),
-                                    ds.level.dimension().location()
-                                );
-                            }
-                            workDispatched = true;
-                            final List<ChunkPos> finalSyncBatch = new ArrayList<>(syncBatch);
-                            final ServerLevel level = ds.level;
-                            final UUID playerUUID = player.getUUID();
-                            server.execute(() -> {
-                                ServerPlayer p = server.getPlayerList().getPlayer(playerUUID);
-                                if (p != null) {
-                                    ServerChunkCache cache = level.getChunkSource();
-                                    List<ChunkPos> toLoadAndSend = new ArrayList<>();
-                                    for (ChunkPos syncPos : finalSyncBatch) {
-                                        if (!synced.add(syncPos.toLong())) continue;
-
-                                        LevelChunk c = cache.getChunk(syncPos.x, syncPos.z, false);
-                                        if (c != null) {
-                                            com.ethan.voxyworldgenv2.network.NetworkHandler.sendLODData(p, c);
-                                        } else {
-                                            // completed chunk exists in cache but isn't loaded: load it so we can stream LOD now.
-                                            queueTicketAdd(level, syncPos);
-                                            toLoadAndSend.add(syncPos);
-                                        }
-                                    }
-
-                                    if (!toLoadAndSend.isEmpty()) {
-                                        processPendingTickets();
-
-                                        for (ChunkPos syncPos : toLoadAndSend) {
-                                            ((ServerChunkCacheMixin) cache).invokeGetChunkFutureMainThread(syncPos.x, syncPos.z, ChunkStatus.FULL, true)
-                                                .whenCompleteAsync((result, throwable) -> {
-                                                    try {
-                                                        ServerPlayer target = server.getPlayerList().getPlayer(playerUUID);
-                                                        if (throwable == null && result != null && result.isSuccess() && result.orElse(null) instanceof LevelChunk chunk && target != null) {
-                                                            com.ethan.voxyworldgenv2.network.NetworkHandler.sendLODData(target, chunk);
-                                                        } else {
-                                                            // allow retries if loading/sending failed
-                                                            synced.remove(syncPos.toLong());
-                                                        }
-                                                    } finally {
-                                                        queueTicketRemove(level, syncPos);
-                                                    }
-                                                }, server);
-                                        }
-                                    }
-                                }
-                            });
-                            break; // processed one player, break to skip sleep
-                        }
-                    }
-                    
-                    if (workDispatched) {
+                    if (syncDispatched) {
                         Thread.sleep(10); // small delay to prevent overwhelming network/server tasks
                         continue; 
                     }
@@ -438,6 +372,101 @@ public final class ChunkGenerationManager {
                 try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
             }
         }
+    }
+
+    private boolean dispatchSyncWork(List<ServerPlayer> players) {
+        for (ServerPlayer player : players) {
+            var synced = PlayerTracker.getInstance().getSyncedChunks(player.getUUID());
+            if (synced == null) continue;
+
+            DimensionState ds = getOrSetupState((ServerLevel) player.level());
+            int radius = ds.tellusActive ? Math.max(Config.DATA.generationRadius, 128) : Config.DATA.generationRadius;
+            List<ChunkPos> syncBatch = new ArrayList<>();
+            ds.distanceGraph.collectCompletedInRange(player.chunkPosition(), radius, synced, syncBatch, 64);
+
+            if (syncBatch.isEmpty()) continue;
+
+            if (Config.DATA.enableFlowLogs) {
+                VoxyWorldGenV2.LOGGER.info(
+                    "worker sync dispatch: {} completed chunks for player {} in {}",
+                    syncBatch.size(),
+                    player.getGameProfile().getName(),
+                    ds.level.dimension().location()
+                );
+            }
+
+            final MinecraftServer execServer = this.server;
+            if (execServer == null || !running.get()) {
+                return false;
+            }
+
+            final List<ChunkPos> finalSyncBatch = new ArrayList<>(syncBatch);
+            final ServerLevel level = ds.level;
+            final UUID playerUUID = player.getUUID();
+
+            execServer.execute(() -> {
+                ServerPlayer p = execServer.getPlayerList().getPlayer(playerUUID);
+                if (p != null) {
+                    ServerChunkCache cache = level.getChunkSource();
+                    List<ChunkPos> toLoadAndSend = new ArrayList<>();
+                    for (ChunkPos syncPos : finalSyncBatch) {
+                        if (!synced.add(syncPos.toLong())) continue;
+
+                        LevelChunk c = cache.getChunk(syncPos.x, syncPos.z, false);
+                        if (c != null) {
+                            com.ethan.voxyworldgenv2.network.NetworkHandler.sendLODData(p, c);
+                        } else {
+                            // completed chunk exists in cache but isn't loaded: load it so we can stream LOD now.
+                            queueTicketAdd(level, syncPos);
+                            toLoadAndSend.add(syncPos);
+                        }
+                    }
+
+                    if (!toLoadAndSend.isEmpty()) {
+                        processPendingTickets();
+
+                        for (ChunkPos syncPos : toLoadAndSend) {
+                            final MinecraftServer callbackServer = this.server;
+                            var future = ((ServerChunkCacheMixin) cache)
+                                .invokeGetChunkFutureMainThread(syncPos.x, syncPos.z, ChunkStatus.FULL, true);
+
+                            if (callbackServer != null) {
+                                future.whenCompleteAsync((result, throwable) -> {
+                                    try {
+                                        ServerPlayer target = callbackServer.getPlayerList().getPlayer(playerUUID);
+                                        if (throwable == null && result != null && result.isSuccess() && result.orElse(null) instanceof LevelChunk chunk && target != null) {
+                                            com.ethan.voxyworldgenv2.network.NetworkHandler.sendLODData(target, chunk);
+                                        } else {
+                                            // allow retries if loading/sending failed
+                                            synced.remove(syncPos.toLong());
+                                        }
+                                    } finally {
+                                        queueTicketRemove(level, syncPos);
+                                    }
+                                }, callbackServer);
+                            } else {
+                                future.whenComplete((result, throwable) -> {
+                                    try {
+                                        if (throwable == null && result != null && result.isSuccess() && result.orElse(null) instanceof LevelChunk chunk) {
+                                            com.ethan.voxyworldgenv2.network.NetworkHandler.sendLODData(p, chunk);
+                                        } else {
+                                            // allow retries if loading/sending failed
+                                            synced.remove(syncPos.toLong());
+                                        }
+                                    } finally {
+                                        queueTicketRemove(level, syncPos);
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+            });
+
+            return true;
+        }
+
+        return false;
     }
 
     private void logFlowStatus(String key, String message) {
