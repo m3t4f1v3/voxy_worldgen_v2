@@ -39,9 +39,10 @@ public final class ServerEventHandler {
     }
 
     public static void onChunkLoad(ServerLevel level, LevelChunk chunk) {
-        // sync LOD data to nearby players for chunks that were already generated but
-        // couldn't be synced at generation time because they weren't loaded
-        if (!ChunkGenerationManager.getInstance().isChunkCompleted(level, chunk.getPos())) return;
+        // re-ingest the freshly-loaded chunk so Voxy receives biome data with correct
+        // neighbor context (fixes hard snow/biome blend edges on new worlds, issue #40).
+        // also handles syncing pre-generated chunks that couldn't be sent at generation
+        // time because the player wasn't loaded yet (issue #50).
         for (ServerPlayer player : PlayerTracker.getInstance().getPlayers()) {
             if (player.level() == level) {
                 NetworkHandler.sendLODData(player, chunk);

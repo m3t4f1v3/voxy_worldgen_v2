@@ -34,6 +34,9 @@ public class NetworkClientHandler {
     private static void handleLODData(NetworkHandler.LODDataPayload payload) {
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) return;
+
+        // discard LOD data from a different dimension to prevent cross-dimension rendering artifacts (issue #43)
+        if (!level.dimension().equals(payload.dimension())) return;
         
         // calculate approximate payload size
         long bytes = 0;
