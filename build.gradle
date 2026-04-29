@@ -12,7 +12,7 @@ base {
 
 repositories {
     mavenCentral()
-    maven { url 'https://maven.shedaniel.me/' }
+    maven { url 'https://maven.architectury.dev/' }
     maven { url 'https://maven.terraformersmc.com/' }
 }
 
